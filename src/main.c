@@ -23,6 +23,7 @@ int columns = 10;
 const float TILE_SIZE_CONSTANT = 600.0;
 int bombs_amt = 10;
 int tiles_revealed = 0;
+bool lost = false;
 
 Camera2D camera;
 
@@ -96,8 +97,10 @@ void RevealTile(int x, int y) {
   int index = TilePositionToIndex(x, y);
 
   tiles[index].state = TILE_REVEALED;
-  if (tiles[index].is_bomb)
+  if (tiles[index].is_bomb) {
+    lost = true;
     return;
+  }
   tiles_revealed += 1;
   int bombs = 0;
   for (int i = -1; i <= 1; i++) {
@@ -144,7 +147,7 @@ void UpdateTile(struct Entity *tile) {
 
   if (mouse_position.x >= tile->x && mouse_position.x <= tile->x + size &&
       mouse_position.y >= tile->y && mouse_position.y <= tile->y + size &&
-      tiles_revealed != rows * columns - bombs_amt) {
+      tiles_revealed != rows * columns - bombs_amt && !lost) {
     outline_color = RAYWHITE;
     if (IsMouseButtonDown(0) || IsMouseButtonDown(1)) {
       outline_color = BLACK;
@@ -293,8 +296,10 @@ void UpdateDrawFrame() {
   UpdateEntities();
 
   EndMode2D();
-  if (tiles_revealed == rows * columns - bombs_amt) {
+  if (tiles_revealed == rows * columns - bombs_amt && !lost) {
     DrawText("YOU WON! :)", 400, 750, 30, DARKGREEN);
+  } else if (lost) {
+    DrawText("YOU LOST! :(", 400, 750, 30, RED);
   }
 
   EndDrawing();
