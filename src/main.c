@@ -23,6 +23,14 @@ int columns = 10;
 const float TILE_SIZE_CONSTANT = 600.0;
 int bombs = 10;
 
+Camera2D camera;
+
+Vector2 GlobalMousePosition();
+Vector2 GlobalMousePosition() {
+  return (Vector2){(float)GetMouseX() - camera.offset.x + camera.target.x,
+                   (float)GetMouseY() - camera.offset.y + camera.target.y};
+}
+
 struct Entity {
   struct Entity *next_entity;
   float x;
@@ -37,19 +45,37 @@ struct Entity {
 
 struct Entity *first_entity;
 
+void SpawnEntity(struct Entity *entity);
+
 struct Entity *AllocateEntity(struct Entity *entity);
+
+void SpawnEntity(struct Entity *entity) {
+  struct Entity *allocated_entity = AllocateEntity(entity);
+  (*allocated_entity).next_entity = first_entity;
+  first_entity = allocated_entity;
+}
 struct Entity *AllocateEntity(struct Entity *entity) {
   struct Entity *allocated_entity = malloc(sizeof(struct Entity));
   *allocated_entity = *entity;
   return allocated_entity;
 }
 
+void UpdateFieldOutline(struct Entity *outline);
 void UpdateTile(struct Entity *tile);
 void UpdateTile(struct Entity *tile) {
-  Rectangle rec = {tile->x, tile->y, TILE_SIZE_CONSTANT / rows,
-                   TILE_SIZE_CONSTANT / rows};
+  Color outline_color = GRAY;
+  Vector2 mouse_position = GlobalMousePosition();
+  float size = TILE_SIZE_CONSTANT / rows;
+  if (mouse_position.x >= tile->x && mouse_position.x <= tile->x + size &&
+      mouse_position.y >= tile->y && mouse_position.y <= tile->y + size) {
+    outline_color = RAYWHITE;
+    if (IsMouseButtonDown(0) || IsMouseButtonDown(1)) {
+      outline_color = BLACK;
+    }
+  }
+  Rectangle rec = {tile->x, tile->y, size, size};
   DrawRectangleRec(rec, LIGHTGRAY);
-  DrawRectangleLinesEx(rec, TILE_SIZE_CONSTANT / rows / 10.0, GRAY);
+  DrawRectangleLinesEx(rec, size / 10.0, outline_color);
 }
 
 struct Entity *CreateField();
@@ -77,13 +103,24 @@ struct Entity *CreateField() {
     }
   }
 
+  struct Entity field_outline = {};
+  field_outline.Update = &UpdateFieldOutline;
+  field_outline.x = -TILE_SIZE_CONSTANT / rows / 10.0f;
+  field_outline.y = field_outline.x;
+
+  SpawnEntity(&field_outline);
+
   return last_tile;
+}
+
+void UpdateFieldOutline(struct Entity *outline) {
+  Rectangle rec = {outline->x, outline->y, -outline->x * 2 + TILE_SIZE_CONSTANT,
+                   -outline->y * 2 + TILE_SIZE_CONSTANT};
+  DrawRectangleLinesEx(rec, -outline->x, GRAY);
 }
 
 void UpdateDrawFrame();
 void UpdateEntities();
-
-//------------------ASSETS--------------
 
 int main() {
 
@@ -102,6 +139,10 @@ int main() {
   emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
 #else
   CreateField();
+  camera = (Camera2D){0};
+  camera.target = (Vector2){TILE_SIZE_CONSTANT / 2, TILE_SIZE_CONSTANT / 2};
+  camera.offset = (Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
+  camera.zoom = 1.0f;
 
   // first_entity = malloc(sizeof(struct Entity));
   //  #ifndef PLATFORM_ANDROID
@@ -120,9 +161,14 @@ void UpdateDrawFrame() {
   // Draw
   //----------------------------------------------------------------------------------
   BeginDrawing();
-  ClearBackground(RAYWHITE);
+  ClearBackground(LIGHTGRAY);
   DrawFPS(10, 10);
+
+  BeginMode2D(camera);
+
   UpdateEntities();
+
+  EndMode2D();
 
   EndDrawing();
 }
