@@ -22,6 +22,7 @@ int rows = 10;
 int columns = 10;
 const float TILE_SIZE_CONSTANT = 600.0;
 int bombs_amt = 10;
+int tiles_revealed = 0;
 
 Camera2D camera;
 
@@ -97,6 +98,7 @@ void RevealTile(int x, int y) {
   tiles[index].state = TILE_REVEALED;
   if (tiles[index].is_bomb)
     return;
+  tiles_revealed += 1;
   int bombs = 0;
   for (int i = -1; i <= 1; i++) {
     for (int j = -1; j <= 1; j++) {
@@ -113,7 +115,6 @@ void RevealTile(int x, int y) {
   tiles[index].number = bombs;
 
   if (bombs == 0) {
-    // return;
     for (int i = -1; i <= 1; i++) {
 
       for (int j = -1; j <= 1; j++) {
@@ -142,7 +143,8 @@ void UpdateTile(struct Entity *tile) {
   float size = TILE_SIZE_CONSTANT / rows;
 
   if (mouse_position.x >= tile->x && mouse_position.x <= tile->x + size &&
-      mouse_position.y >= tile->y && mouse_position.y <= tile->y + size) {
+      mouse_position.y >= tile->y && mouse_position.y <= tile->y + size &&
+      tiles_revealed != rows * columns - bombs_amt) {
     outline_color = RAYWHITE;
     if (IsMouseButtonDown(0) || IsMouseButtonDown(1)) {
       outline_color = BLACK;
@@ -151,20 +153,30 @@ void UpdateTile(struct Entity *tile) {
       Vector2 tile_position = GlobalToTilePosition(tile->x, tile->y);
 
       RevealTile((int)tile_position.x, (int)tile_position.y);
+    } else if (IsMouseButtonReleased(1) &&
+               tiles[tile_index].state == TILE_CLOSED) {
+      tiles[tile_index].state = TILE_FLAGGED;
+    } else if (IsMouseButtonReleased(1) &&
+               tiles[tile_index].state == TILE_FLAGGED) {
+      tiles[tile_index].state = TILE_CLOSED;
     }
   }
   Rectangle rec = {tile->x, tile->y, size, size};
   DrawRectangleRec(rec, LIGHTGRAY);
-  DrawRectangleLinesEx(rec, size / 10.0, outline_color);
+  if (tiles[tile_index].state != TILE_REVEALED) {
+    DrawRectangleLinesEx(rec, size / 10.0, outline_color);
+  }
 
   if (tiles[tile_index].state == TILE_REVEALED) {
-    char string[sizeof(int)];
+    char string[sizeof(int)] = "";
     if (tiles[tile_index].is_bomb) {
       sprintf(string, "B");
-    } else {
+    } else if (tiles[tile_index].number != 0) {
       sprintf(string, "%d", tiles[tile_index].number);
     }
     DrawText(string, tile->x + size / 2.7, tile->y + size / 4, size / 2, BLACK);
+  } else if (tiles[tile_index].state == TILE_FLAGGED) {
+    DrawText("F", tile->x + size / 2.7, tile->y + size / 4, size / 2, RED);
   }
 }
 
@@ -281,6 +293,9 @@ void UpdateDrawFrame() {
   UpdateEntities();
 
   EndMode2D();
+  if (tiles_revealed == rows * columns - bombs_amt) {
+    DrawText("YOU WON! :)", 400, 750, 30, DARKGREEN);
+  }
 
   EndDrawing();
 }
