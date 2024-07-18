@@ -31,10 +31,19 @@ Vector2 GlobalMousePosition() {
                    (float)GetMouseY() - camera.offset.y + camera.target.y};
 }
 
-int PositionToTileIndex(float x, float y);
-int PositionToTileIndex(float x, float y) {
-  return (int)x / (int)(TILE_SIZE_CONSTANT / rows) * columns +
-         (int)y / (int)(TILE_SIZE_CONSTANT / rows);
+Vector2 GlobalToTilePosition(float x, float y);
+Vector2 GlobalToTilePosition(float x, float y) {
+  return (Vector2){x / (TILE_SIZE_CONSTANT / rows),
+                   y / (TILE_SIZE_CONSTANT / rows)};
+}
+
+int TilePositionToIndex(float x, float y);
+int TilePositionToIndex(float x, float y) { return (int)x * columns + (int)y; }
+
+int GlobalPositionToTileIndex(float x, float y);
+int GlobalPositionToTileIndex(float x, float y) {
+  Vector2 tile_position = GlobalToTilePosition(x, y);
+  return TilePositionToIndex(tile_position.x, tile_position.y);
 }
 
 struct Entity {
@@ -77,23 +86,86 @@ struct Entity *AllocateEntity(struct Entity *entity) {
   return allocated_entity;
 }
 
+enum TileState TILE_CLOSED = Closed;
+enum TileState TILE_FLAGGED = Flagged;
+enum TileState TILE_REVEALED = Revealed;
+
+void RevealTile(int x, int y);
+void RevealTile(int x, int y) {
+  int index = TilePositionToIndex(x, y);
+
+  tiles[index].state = TILE_REVEALED;
+  if (tiles[index].is_bomb)
+    return;
+  int bombs = 0;
+  for (int i = -1; i <= 1; i++) {
+    for (int j = -1; j <= 1; j++) {
+      int tilex = i + x;
+      int tiley = j + y;
+      if (tilex >= 0 && tilex < rows && tiley >= 0 && tiley < columns) {
+        int index = TilePositionToIndex(tilex, tiley);
+        if (tiles[index].is_bomb) {
+          bombs += 1;
+        }
+      }
+    }
+  }
+  tiles[index].number = bombs;
+
+  if (bombs == 0) {
+    // return;
+    for (int i = -1; i <= 1; i++) {
+
+      for (int j = -1; j <= 1; j++) {
+
+        int tilex = i + x;
+        int tiley = j + y;
+
+        int index = TilePositionToIndex(tilex, tiley);
+        if (tilex >= 0 && tilex < columns && tiley >= 0 && tiley < rows &&
+            !(tilex == x && tiley == y) && tiles[index].state == TILE_CLOSED) {
+          RevealTile(tilex, tiley);
+        }
+      }
+    }
+  }
+}
+
 void UpdateFieldOutline(struct Entity *outline);
 void UpdateTile(struct Entity *tile);
 void UpdateTile(struct Entity *tile) {
-  int tile_index = PositionToTileIndex(tile->x, tile->y);
+  int tile_index = GlobalPositionToTileIndex(tile->x, tile->y);
+
   Color outline_color = GRAY;
   Vector2 mouse_position = GlobalMousePosition();
+
   float size = TILE_SIZE_CONSTANT / rows;
+
   if (mouse_position.x >= tile->x && mouse_position.x <= tile->x + size &&
       mouse_position.y >= tile->y && mouse_position.y <= tile->y + size) {
     outline_color = RAYWHITE;
     if (IsMouseButtonDown(0) || IsMouseButtonDown(1)) {
       outline_color = BLACK;
     }
+    if (IsMouseButtonReleased(0) && tiles[tile_index].state == TILE_CLOSED) {
+      Vector2 tile_position = GlobalToTilePosition(tile->x, tile->y);
+
+      RevealTile((int)tile_position.x, (int)tile_position.y);
+    }
   }
   Rectangle rec = {tile->x, tile->y, size, size};
   DrawRectangleRec(rec, LIGHTGRAY);
   DrawRectangleLinesEx(rec, size / 10.0, outline_color);
+
+  if (tiles[tile_index].state == TILE_REVEALED) {
+    char string[sizeof(int)];
+    if (tiles[tile_index].is_bomb) {
+      sprintf(string, "B");
+    } else {
+      sprintf(string, "%d", tiles[tile_index].number);
+    }
+    DrawText(string, tile->x + size / 2.7, tile->y + size / 4, size / 2, BLACK);
+  }
 }
 
 struct Entity *CreateField();
