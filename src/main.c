@@ -21,7 +21,7 @@ const int screenHeight = 800;
 int rows = 10;
 int columns = 10;
 const float TILE_SIZE_CONSTANT = 600.0;
-int bombs = 10;
+int bombs_amt = 10;
 
 Camera2D camera;
 
@@ -29,6 +29,12 @@ Vector2 GlobalMousePosition();
 Vector2 GlobalMousePosition() {
   return (Vector2){(float)GetMouseX() - camera.offset.x + camera.target.x,
                    (float)GetMouseY() - camera.offset.y + camera.target.y};
+}
+
+int PositionToTileIndex(float x, float y);
+int PositionToTileIndex(float x, float y) {
+  return (int)x / (int)(TILE_SIZE_CONSTANT / rows) * columns +
+         (int)y / (int)(TILE_SIZE_CONSTANT / rows);
 }
 
 struct Entity {
@@ -42,6 +48,17 @@ struct Entity {
 
   void (*Update)(struct Entity *entity);
 };
+
+enum TileState { Closed, Flagged, Revealed };
+
+struct Tile {
+  enum TileState state;
+  bool is_bomb;
+  int number;
+  struct Entity *entity;
+};
+
+struct Tile *tiles;
 
 struct Entity *first_entity;
 
@@ -63,6 +80,7 @@ struct Entity *AllocateEntity(struct Entity *entity) {
 void UpdateFieldOutline(struct Entity *outline);
 void UpdateTile(struct Entity *tile);
 void UpdateTile(struct Entity *tile) {
+  int tile_index = PositionToTileIndex(tile->x, tile->y);
   Color outline_color = GRAY;
   Vector2 mouse_position = GlobalMousePosition();
   float size = TILE_SIZE_CONSTANT / rows;
@@ -80,7 +98,7 @@ void UpdateTile(struct Entity *tile) {
 
 struct Entity *CreateField();
 struct Entity *CreateField() {
-  int tiles_created = 0;
+  tiles = malloc(sizeof(struct Tile) * rows * columns);
   struct Entity *last_tile = NULL;
   for (int x = 0; x < rows; x++) {
     for (int y = 0; y < columns; y++) {
@@ -100,8 +118,30 @@ struct Entity *CreateField() {
         (*last_tile).next_entity = allocated_tile;
       }
       last_tile = allocated_tile;
+
+      struct Tile tile_data = {};
+      tile_data.entity = last_tile;
+      tiles[x * columns + y] = tile_data;
     }
   }
+
+  int *tiles_without_bombs = malloc(sizeof(int) * rows * columns);
+  for (int i = 0; i < rows * columns; i++) {
+    tiles_without_bombs[i] = i;
+  }
+  int tiles_without_bombs_len = rows * columns;
+  for (int i = 0; i < bombs_amt; i++) {
+    int r = rand() % tiles_without_bombs_len;
+    int random_tile = tiles_without_bombs[r];
+    tiles[random_tile].is_bomb = true;
+
+    for (int j = r; j < tiles_without_bombs_len - 1; j++) {
+      tiles_without_bombs[j] = tiles_without_bombs[j + 1];
+    }
+
+    tiles_without_bombs_len -= 1;
+  }
+  free(tiles_without_bombs);
 
   struct Entity field_outline = {};
   field_outline.Update = &UpdateFieldOutline;
@@ -123,7 +163,7 @@ void UpdateDrawFrame();
 void UpdateEntities();
 
 int main() {
-
+  srand(time(NULL));
   SetConfigFlags(FLAG_MSAA_4X_HINT);
   InitWindow(screenWidth, screenHeight, "Raylib basic window");
 
