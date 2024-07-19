@@ -196,8 +196,8 @@ void UpdateTile(struct Entity *tile) {
   }
 }
 
-struct Entity *CreateField();
-struct Entity *CreateField() {
+void CreateField();
+void CreateField() {
   tiles = malloc(sizeof(struct Tile) * rows * columns);
   struct Entity *last_tile = NULL;
   for (int x = 0; x < rows; x++) {
@@ -247,8 +247,6 @@ struct Entity *CreateField() {
   field_outline.y = field_outline.x;
 
   SpawnEntity(&field_outline);
-
-  return last_tile;
 }
 
 void UpdateFieldOutline(struct Entity *outline) {
