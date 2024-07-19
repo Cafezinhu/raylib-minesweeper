@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef PLATFORM_WEB
 #include <time.h>
+#endif
 
 #if defined(PLATFORM_DESKTOP)
 #define GLSL_VERSION 330
@@ -13,6 +15,7 @@
 #endif
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h>
+// #define rand() ((int)(emscripten_random() * 100))
 #endif
 
 const int screenWidth = 1000;
@@ -139,6 +142,7 @@ void RevealTile(int x, int y) {
 void UpdateFieldOutline(struct Entity *outline);
 void UpdateTile(struct Entity *tile);
 void UpdateTile(struct Entity *tile) {
+
   int tile_index = GlobalPositionToTileIndex(tile->x, tile->y);
 
   Color outline_color = GRAY;
@@ -165,9 +169,11 @@ void UpdateTile(struct Entity *tile) {
       tiles[tile_index].state = TILE_CLOSED;
     }
   }
+
   Rectangle rec = {tile->x, tile->y, size, size};
   DrawRectangleRec(rec, LIGHTGRAY);
   if (tiles[tile_index].state != TILE_REVEALED) {
+
     DrawRectangleLinesEx(rec, size / 10.0, outline_color);
   }
 
@@ -255,34 +261,38 @@ void UpdateDrawFrame();
 void UpdateEntities();
 
 int main() {
+
+#ifndef PLATFORM_WEB
   srand(time(NULL));
+#else
+  srand(emscripten_get_now());
+#endif
   SetConfigFlags(FLAG_MSAA_4X_HINT);
   InitWindow(screenWidth, screenHeight, "Minesweeper");
 
 #ifndef PLATFORM_ANDROID
-  ChangeDirectory("assets");
+  // ChangeDirectory("assets");
 #endif
 
   SetExitKey(0);
 
   SetTargetFPS(60);
 
-#if defined(PLATFORM_WEB)
-  emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
-#else
   CreateField();
   camera = (Camera2D){0};
   camera.target = (Vector2){TILE_SIZE_CONSTANT / 2, TILE_SIZE_CONSTANT / 2};
   camera.offset = (Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
   camera.zoom = 1.0f;
 
-  //  #ifndef PLATFORM_ANDROID
-  //  ChangeDirectory("..");
-  //  #endif
+//  #ifndef PLATFORM_ANDROID
+//  ChangeDirectory("..");
+//  #endif
+#ifdef PLATFORM_WEB
+  emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
+#endif
   while (!WindowShouldClose()) {
     UpdateDrawFrame();
   }
-#endif
 
   CloseWindow();
   return 0;
@@ -330,10 +340,12 @@ void UpdateDrawFrame() {
 }
 
 void UpdateEntities() {
+
   struct Entity *entity = first_entity;
   struct Entity *previous_entity = NULL;
 
   while (entity != NULL) {
+
     if (entity->dead) {
       struct Entity *next_entity = entity->next_entity;
       struct Entity *dead_entity = entity;
@@ -345,6 +357,7 @@ void UpdateEntities() {
       }
       free(dead_entity);
     } else {
+
       entity->Update(entity);
       previous_entity = entity;
       entity = entity->next_entity;
