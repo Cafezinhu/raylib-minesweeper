@@ -7,7 +7,8 @@ void SpawnEntity(struct Entity *entity) {
   first_entity = allocated_entity;
 }
 struct Entity *AllocateEntity(struct Entity *entity) {
-  struct Entity *allocated_entity = malloc(sizeof(struct Entity));
+  struct Entity *allocated_entity =
+      (struct Entity *)malloc(sizeof(struct Entity));
   *allocated_entity = *entity;
   return allocated_entity;
 }

@@ -6,7 +6,7 @@
 #include <string.h>
 
 void CreateField() {
-  tiles = malloc(sizeof(struct Tile) * rows * columns);
+  tiles = (struct Tile *)malloc(sizeof(struct Tile) * rows * columns);
   struct Entity *last_tile = NULL;
   for (int x = 0; x < rows; x++) {
     for (int y = 0; y < columns; y++) {
@@ -31,7 +31,7 @@ void CreateField() {
     }
   }
 
-  int *tiles_without_bombs = malloc(sizeof(int) * rows * columns);
+  int *tiles_without_bombs = (int *)malloc(sizeof(int) * rows * columns);
   for (int i = 0; i < rows * columns; i++) {
     tiles_without_bombs[i] = i;
   }

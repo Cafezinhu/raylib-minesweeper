@@ -97,7 +97,7 @@ void UpdateTile(struct Entity *tile) {
     char string[sizeof(int)] = "";
     Color text_color = BLACK;
     if (tiles[tile_index].is_bomb) {
-      Rectangle rec = {tile->x + size / 1.4, tile->y + size / 5, size / 20,
+      Rectangle rec = {tile->x + size / 1.4f, tile->y + size / 5, size / 20,
                        size / 6};
 
       DrawRectanglePro(rec, (Vector2){0, 0}, 45, ORANGE);
