@@ -173,12 +173,18 @@ void UpdateTile(struct Entity *tile) {
 
   if (tiles[tile_index].state == TILE_REVEALED) {
     char string[sizeof(int)] = "";
+    Color text_color = BLACK;
     if (tiles[tile_index].is_bomb) {
       sprintf(string, "B");
     } else if (tiles[tile_index].number != 0) {
-      sprintf(string, "%d", tiles[tile_index].number);
+      int number = tiles[tile_index].number;
+      Color colors[] = {BLACK, BLUE,    DARKGREEN, RED, DARKBLUE,
+                        BROWN, SKYBLUE, PURPLE,    GRAY};
+      text_color = colors[number];
+      sprintf(string, "%d", number);
     }
-    DrawText(string, tile->x + size / 2.7, tile->y + size / 4, size / 2, BLACK);
+    DrawText(string, tile->x + size / 2.7, tile->y + size / 4, size / 2,
+             text_color);
   } else if (tiles[tile_index].state == TILE_FLAGGED) {
     DrawText("F", tile->x + size / 2.7, tile->y + size / 4, size / 2, RED);
   }
