@@ -94,6 +94,7 @@ enum TileState TILE_REVEALED = Revealed;
 
 void RevealTile(int x, int y);
 void RevealTile(int x, int y) {
+
   int index = TilePositionToIndex(x, y);
 
   tiles[index].state = TILE_REVEALED;
@@ -195,12 +196,10 @@ struct Entity *CreateField() {
       tile.y = y * TILE_SIZE_CONSTANT / rows;
       tile.Update = &UpdateTile;
       if (last_tile == NULL) {
-
         first_entity = AllocateEntity(&tile);
         last_tile = first_entity;
         allocated_tile = last_tile;
       } else {
-
         allocated_tile = AllocateEntity(&tile);
         (*last_tile).next_entity = allocated_tile;
       }
@@ -252,7 +251,7 @@ void UpdateEntities();
 int main() {
   srand(time(NULL));
   SetConfigFlags(FLAG_MSAA_4X_HINT);
-  InitWindow(screenWidth, screenHeight, "Raylib basic window");
+  InitWindow(screenWidth, screenHeight, "Minesweeper");
 
 #ifndef PLATFORM_ANDROID
   ChangeDirectory("assets");
@@ -271,7 +270,6 @@ int main() {
   camera.offset = (Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
   camera.zoom = 1.0f;
 
-  // first_entity = malloc(sizeof(struct Entity));
   //  #ifndef PLATFORM_ANDROID
   //  ChangeDirectory("..");
   //  #endif
@@ -284,22 +282,42 @@ int main() {
   return 0;
 }
 
+void RestartGame();
+void RestartGame() {
+  free(tiles);
+  lost = false;
+  tiles_revealed = 0;
+  struct Entity *entity = first_entity;
+  while (entity != NULL) {
+    struct Entity *dead_entity = entity;
+    entity = entity->next_entity;
+    free(dead_entity);
+  }
+
+  CreateField();
+}
+
 void UpdateDrawFrame() {
   // Draw
   //----------------------------------------------------------------------------------
   BeginDrawing();
   ClearBackground(LIGHTGRAY);
   DrawFPS(10, 10);
-
   BeginMode2D(camera);
+  if (IsKeyPressed(KEY_R)) {
+
+    RestartGame();
+  }
 
   UpdateEntities();
 
   EndMode2D();
   if (tiles_revealed == rows * columns - bombs_amt && !lost) {
-    DrawText("YOU WON! :)", 400, 750, 30, DARKGREEN);
+    DrawText("YOU WON! :)", 400, 730, 30, DARKGREEN);
+    DrawText("Press R to restart.", 350, 760, 30, BLACK);
   } else if (lost) {
-    DrawText("YOU LOST! :(", 400, 750, 30, RED);
+    DrawText("YOU LOST! :(", 400, 730, 30, RED);
+    DrawText("Press R to restart.", 350, 760, 30, BLACK);
   }
 
   EndDrawing();
