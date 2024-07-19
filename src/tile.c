@@ -1,4 +1,5 @@
 #include "tile.h"
+#include "raylib.h"
 #include <stdio.h>
 
 Vector2 GlobalToTilePosition(float x, float y) {
@@ -96,6 +97,11 @@ void UpdateTile(struct Entity *tile) {
     char string[sizeof(int)] = "";
     Color text_color = BLACK;
     if (tiles[tile_index].is_bomb) {
+      Rectangle rec = {tile->x + size / 1.4, tile->y + size / 5, size / 20,
+                       size / 6};
+
+      DrawRectanglePro(rec, (Vector2){0, 0}, 45, ORANGE);
+      DrawCircle(tile->x + size / 2, tile->y + size / 2, size / 4, BLACK);
       sprintf(string, "B");
     } else if (tiles[tile_index].number != 0) {
       int number = tiles[tile_index].number;
@@ -103,10 +109,15 @@ void UpdateTile(struct Entity *tile) {
                         BROWN, SKYBLUE, PURPLE,    GRAY};
       text_color = colors[number];
       sprintf(string, "%d", number);
+      DrawText(string, tile->x + size / 2.7, tile->y + size / 4, size / 2,
+               text_color);
     }
-    DrawText(string, tile->x + size / 2.7, tile->y + size / 4, size / 2,
-             text_color);
+
   } else if (tiles[tile_index].state == TILE_FLAGGED) {
-    DrawText("F", tile->x + size / 2.7, tile->y + size / 4, size / 2, RED);
+    DrawRectangle(tile->x + size / 2.605, tile->y + size / 3, 4, size / 2,
+                  BLACK);
+    DrawPoly((Vector2){tile->x + size / 2, tile->y + size / 3}, 3, size / 4, 0,
+             RED);
+    // DrawText("F", tile->x + size / 2.7, tile->y + size / 4, size / 2, RED);
   }
 }
