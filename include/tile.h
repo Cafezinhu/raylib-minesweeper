@@ -4,6 +4,7 @@
 #ifndef GAME_H
 #include "game.h"
 #endif
+#define TILE_H
 enum TileState { Closed, Flagged, Revealed };
 
 struct Tile {

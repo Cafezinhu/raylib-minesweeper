@@ -1,5 +1,8 @@
 #include "tile.h"
 #include "raylib.h"
+#ifndef FIELD_H
+#include "field.c"
+#endif
 #include <stdio.h>
 
 Vector2 GlobalToTilePosition(float x, float y) {
@@ -16,6 +19,9 @@ int GlobalPositionToTileIndex(float x, float y) {
 
 void RevealTile(int x, int y) {
 
+  if (tiles_revealed == 0) {
+    FillFieldWithBombs(x, y);
+  }
   int index = TilePositionToIndex(x, y);
 
   tiles[index].state = TILE_REVEALED;

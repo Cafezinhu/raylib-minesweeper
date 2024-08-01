@@ -5,3 +5,4 @@
 void UpdateFieldOutline(struct Entity *outline);
 
 void CreateField();
+void FillFieldWithBombs(int empty_x, int empty_y);
