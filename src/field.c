@@ -43,8 +43,6 @@ void CreateField() {
   SpawnEntity(&field_outline);
 }
 
-enum TilePosition { Corner, Edge, Middle };
-
 void FillFieldWithBombs(int empty_x, int empty_y) {
   int *tiles_to_be_filled_with_bombs;
   int tiles_to_be_filled_with_bombs_len;
@@ -52,23 +50,17 @@ void FillFieldWithBombs(int empty_x, int empty_y) {
   int *tiles_without_bombs;
   int tiles_without_bombs_len;
 
-  enum TilePosition tile_position;
-
   if (empty_x == 0 && empty_y == 0 || empty_x == 0 && empty_y == rows - 1 ||
       empty_x == columns - 1 && empty_y == 0 ||
       empty_x == columns - 1 && empty_y == rows - 1) {
 
     tiles_without_bombs_len = 4;
-    tile_position = Corner;
-
   } else if (empty_x == 0 || empty_x == columns - 1 || empty_y == 0 ||
              empty_y == rows - 1) {
 
     tiles_without_bombs_len = 6;
-    tile_position = Edge;
   } else {
     tiles_without_bombs_len = 9;
-    tile_position = Middle;
   }
 
   tiles_to_be_filled_with_bombs_len = rows * columns - tiles_without_bombs_len;
