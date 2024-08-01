@@ -50,9 +50,9 @@ void FillFieldWithBombs(int empty_x, int empty_y) {
   int *tiles_without_bombs;
   int tiles_without_bombs_len;
 
-  if (empty_x == 0 && empty_y == 0 || empty_x == 0 && empty_y == rows - 1 ||
-      empty_x == columns - 1 && empty_y == 0 ||
-      empty_x == columns - 1 && empty_y == rows - 1) {
+  if ((empty_x == 0 && empty_y == 0) || (empty_x == 0 && empty_y == rows - 1) ||
+      (empty_x == columns - 1 && empty_y == 0) ||
+      (empty_x == columns - 1 && empty_y == rows - 1)) {
 
     tiles_without_bombs_len = 4;
   } else if (empty_x == 0 || empty_x == columns - 1 || empty_y == 0 ||
