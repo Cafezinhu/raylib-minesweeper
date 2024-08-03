@@ -22,15 +22,21 @@ void RevealTile(int x, int y) {
   if (tiles_revealed == 0) {
     FillFieldWithBombs(x, y);
   }
+  bool was_closed = false;
   int index = TilePositionToIndex(x, y);
-
+  if (tiles[index].state == TILE_CLOSED) {
+    tiles_revealed += 1;
+    was_closed = true;
+  }
   tiles[index].state = TILE_REVEALED;
+
   if (tiles[index].is_bomb) {
     lost = true;
     return;
   }
-  tiles_revealed += 1;
+
   int bombs = 0;
+  int flags = 0;
   for (int i = -1; i <= 1; i++) {
     for (int j = -1; j <= 1; j++) {
       int tilex = i + x;
@@ -40,12 +46,16 @@ void RevealTile(int x, int y) {
         if (tiles[index].is_bomb) {
           bombs += 1;
         }
+        if (tiles[index].state == Flagged) {
+          flags += 1;
+        }
       }
     }
   }
   tiles[index].number = bombs;
 
-  if (bombs == 0) {
+  if (bombs == 0 || flags == bombs && !was_closed) { //|| (flags == bombs &&
+    // tiles[index].state == Revealed)
     for (int i = -1; i <= 1; i++) {
 
       for (int j = -1; j <= 1; j++) {
@@ -79,7 +89,10 @@ void UpdateTile(struct Entity *tile) {
     if (IsMouseButtonDown(0) || IsMouseButtonDown(1)) {
       outline_color = BLACK;
     }
-    if (IsMouseButtonReleased(0) && tiles[tile_index].state == TILE_CLOSED) {
+    if (IsMouseButtonReleased(0) &&
+        (tiles[tile_index].state == TILE_CLOSED ||
+         tiles[tile_index].state ==
+             TILE_REVEALED)) { //||tiles[tile_index].state == TILE_REVEALED
       Vector2 tile_position = GlobalToTilePosition(tile->x, tile->y);
 
       RevealTile((int)tile_position.x, (int)tile_position.y);
