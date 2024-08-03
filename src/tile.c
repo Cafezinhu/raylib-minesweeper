@@ -99,9 +99,11 @@ void UpdateTile(struct Entity *tile) {
     } else if (IsMouseButtonReleased(1) &&
                tiles[tile_index].state == TILE_CLOSED) {
       tiles[tile_index].state = TILE_FLAGGED;
+      remaining_bombs -= 1;
     } else if (IsMouseButtonReleased(1) &&
                tiles[tile_index].state == TILE_FLAGGED) {
       tiles[tile_index].state = TILE_CLOSED;
+      remaining_bombs += 1;
     }
   }
 

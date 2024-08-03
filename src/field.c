@@ -41,6 +41,7 @@ void CreateField() {
   field_outline.y = field_outline.x;
 
   SpawnEntity(&field_outline);
+  remaining_bombs = bombs_amt;
 }
 
 void FillFieldWithBombs(int empty_x, int empty_y) {

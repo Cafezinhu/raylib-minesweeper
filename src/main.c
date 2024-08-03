@@ -92,8 +92,14 @@ void UpdateDrawFrame() {
   }
 
   UpdateEntities();
+  char bombs_left_str[30];
+  int bombs_left = remaining_bombs;
+  if (bombs_left < 0)
+    bombs_left = 0;
+  sprintf(bombs_left_str, "Bombs left: %d", bombs_left);
 
   EndMode2D();
+  DrawText(bombs_left_str, 400, 20, 30, BLACK);
   if (tiles_revealed == rows * columns - bombs_amt && !lost) {
     DrawText("YOU WON! :)", 400, 730, 30, DARKGREEN);
     DrawText("Press R to restart.", 350, 760, 30, BLACK);
