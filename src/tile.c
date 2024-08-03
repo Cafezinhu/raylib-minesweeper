@@ -54,7 +54,7 @@ void RevealTile(int x, int y) {
   }
   tiles[index].number = bombs;
 
-  if (bombs == 0 || flags == bombs && !was_closed) { //|| (flags == bombs &&
+  if (bombs == 0 || (flags == bombs && !was_closed)) { //|| (flags == bombs &&
     // tiles[index].state == Revealed)
     for (int i = -1; i <= 1; i++) {
 
